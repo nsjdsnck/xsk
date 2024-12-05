@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <title>动态花瓣爱心</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: black;
+        }
+        canvas {
+            display: block;
+        }
+        #switchButton {
+            position: absolute; /* 使用绝对定位 */
+            top: 10px; /* 调整按钮位置 */
+            left: 10px; /* 调整按钮位置 */
+            padding: 10px 20px; /* 按钮内边距 */
+            background-color: #ffaaa5; /* 背景颜色 */
+            color: white; /* 字体颜色 */
+            border: none; /* 去掉边框 */
+            cursor: pointer; /* 鼠标指针样式 */
+            border-radius: 5px; /* 圆角 */
+            z-index: 1; /* 确保按钮在画布上方 */
+        }
+    </style>
+</head>
+<body>
+    <button id="switchButton">切换到 index1.html</button>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.body.appendChild(renderer.domElement);
+
+        const heartGroup = new THREE.Group(); // 创建一个组用于管理花瓣
+        scene.add(heartGroup);
+        let petalCount = 0; // 当前花瓣数量
+
+        // 创建花瓣形状并添加弧度
+        function createCurvedPetalMesh() {
+            const shape = new THREE.Shape();
+            shape.moveTo(0, 0);
+            shape.bezierCurveTo(1, 2, 2, 2, 2, 0);
+            shape.bezierCurveTo(2, -1, 1, -1, 0, 0);
+            shape.bezierCurveTo(-1, -1, -2, -1, -2, 0);
+            shape.bezierCurveTo(-2, 2, -1, 2, 0, 0);
+
+            const geometry = new THREE.ExtrudeGeometry(shape, {
+                depth: 0.1,  // 控制厚度
+                bevelEnabled: false
+            });
+
+            const positions = geometry.attributes.position.array;
+            for (let i = 0; i < positions.length; i += 3) {
+                positions[i + 2] += Math.sin(positions[i] * Math.PI) * 0.2; 
+            }
+
+            geometry.attributes.position.needsUpdate = true; // 标记为需要更新
+            const material = new THREE.MeshBasicMaterial({ color: 0xffaaa5, side: THREE.DoubleSide });
+            return new THREE.Mesh(geometry, material);
+        }
+
+        // 添加新的花瓣
+        function addPetal() {
+            const theta = Math.random() * Math.PI * 2;
+            const r = Math.sqrt(Math.random());
+
+            const x = 16 * Math.sin(theta) ** 3 * r;
+            const y = (13 * Math.cos(theta) - 5 * Math.cos(2 * theta) - 2 * Math.cos(3 * theta) - Math.cos(4 * theta)) * r;
+
+            const petalMesh = createCurvedPetalMesh();
+            petalMesh.position.set(x, y, (Math.random() * 2 - 1) * 0.5);
+            petalMesh.rotation.z = Math.random() * Math.PI * 2; // 随机旋转
+
+            heartGroup.add(petalMesh);
+            petalCount++;
+        }
+
+        // 定时器来定期添加花瓣
+        setInterval(() => {
+            addPetal();
+        }, 100); // 每100毫秒添加一片花瓣
+
+        camera.position.z = 30;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            heartGroup.rotation.y += 0.002; // 旋转爱心组
+            renderer.render(scene, camera);
+        }
+
+        // 添加按钮点击事件
+        document.getElementById('switchButton').addEventListener('click', () => {
+            console.log("按钮被点击，准备跳转到 index1.html");
+            window.location.href = 'index1.html'; // 跳转到 index1.html
+        });
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
+    </script>
+</body>
+</html>
